@@ -366,7 +366,21 @@
             transform: scale(1.2);
         }
 
-        /* --- MOBILE ADJUSTMENTS --- */
+        /* Visible active YouTube player box tucked nicely in the corner or footer */
+        #playerContainer {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 200px;
+            height: 110px;
+            z-index: 100;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,255,255,0.2);
+            background: #000;
+        }
+
         @media (max-width: 768px) {
             .top-bar {
                 top: 15px;
@@ -388,6 +402,12 @@
             }
             .controls {
                 justify-content: center;
+            }
+            #playerContainer {
+                width: 120px;
+                height: 70px;
+                bottom: 130px;
+                right: 15px;
             }
         }
     </style>
@@ -422,8 +442,8 @@
         </div>
     </header>
 
-    <!-- Reliable Direct YouTube Embed Player -->
-    <div id="playerContainer" style="display: none;"></div>
+    <!-- Visible YouTube Player Box -->
+    <div id="playerContainer"></div>
 
     <!-- Floating Glass Pill Player -->
     <div class="glass-player">
@@ -480,7 +500,7 @@
         let timerInterval = null;
 
         function startMehfil() {
-            document.getElementById('startOverlaystyle') || (document.getElementById('startOverlay').style.display = 'none');
+            document.getElementById('startOverlay').style.display = 'none';
             loadAndPlayTrack();
             isPlaying = true;
             document.getElementById('playPauseBtn').innerText = '⏸';
@@ -492,9 +512,9 @@
             document.getElementById('trackTitle').innerText = track.title;
             document.getElementById('trackArtist').innerText = track.artist;
             
-            // Embed iframe dynamically to avoid any api origin conflicts
+            // Render visible YouTube iframe so browser allows audio playback
             const container = document.getElementById('playerContainer');
-            container.innerHTML = `<iframe width="0" height="0" src="https://www.youtube.com/embed/${track.videoId}?autoplay=1&enablejsapi=1" allow="autoplay"></iframe>`;
+            container.innerHTML = `<iframe width="100%" height="100%" src="https://www.github.com/embed/${track.videoId}?autoplay=1&enablejsapi=1" style="border:none;" allow="autoplay"></iframe>`.replace('www.github.com', 'www.youtube.com');
             
             currentSeconds = 0;
             if (timerInterval) clearInterval(timerInterval);
@@ -509,7 +529,7 @@
         function togglePlay() {
             const container = document.getElementById('playerContainer');
             if (isPlaying) {
-                container.innerHTML = ''; // Pause by removing iframe
+                container.innerHTML = '';
                 document.getElementById('playPauseBtn').innerText = '▶';
                 document.getElementById('vinylDisc').classList.remove('playing');
                 isPlaying = false;
@@ -549,7 +569,7 @@
         }
 
         function changeVolume(val) {
-            // Volume feedback logic if needed
+            // Volume slider handle
         }
 
         function updateProgressUI() {
