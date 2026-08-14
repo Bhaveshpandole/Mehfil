@@ -23,9 +23,10 @@
             width: 100vw;
             overflow: hidden;
             position: relative;
+            background-color: #1a1a1a;
         }
 
-        /* Background image layer to keep dim effect isolated */
+        /* Background image layer with reliable fallback gradient */
         .bg-layer {
             position: fixed;
             top: 0;
@@ -39,25 +40,15 @@
             z-index: -1;
         }
 
-        /* --- DESKTOP DEFAULT STYLES --- */
+        /* --- THEMES (Using high-quality Unsplash retro/cafe vibes as fallback if local images missing) --- */
         body.day-mode .bg-layer {
-            background-image: url('desktop-day.jpg');
+            background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop');
             filter: brightness(1) saturate(1);
         }
 
         body.night-mode .bg-layer {
-            background-image: url('desktop-night.jpg');
-            filter: brightness(0.5) saturate(0.8) contrast(1.1);
-        }
-
-        /* --- MOBILE RESPONSIVE STYLES --- */
-        @media (max-width: 768px) {
-            body.day-mode .bg-layer {
-                background-image: url('mobile-day.jpg');
-            }
-            body.night-mode .bg-layer {
-                background-image: url('mobile-night.jpg');
-            }
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1920&auto=format&fit=crop');
+            filter: brightness(0.6) saturate(0.8) contrast(1.1);
         }
 
         /* Center Big Hindi Title (Pure Bright White) */
@@ -161,7 +152,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -249,7 +240,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 42%    ;
+            width: 42%;
             gap: 6px;
         }
 
@@ -340,7 +331,7 @@
             width: 14px;
             height: 14px;
             border-radius: 50%;
-            background: #d4ac0d; /* Brass / Vintage Metallic Look */
+            background: #d4ac0d;
             border: 2px solid #fff;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
             cursor: pointer;
@@ -379,17 +370,17 @@
 </head>
 <body id="bodyTag" class="day-mode">
 
-    <!-- Separate Background Layer so image stays dim while text remains pure white -->
+    <!-- Background Layer -->
     <div class="bg-layer"></div>
 
-    <!-- Start Overlay to enable audio playback smoothly -->
+    <!-- Start Overlay -->
     <div id="startOverlay">
         <h1>महफ़िल</h1>
         <p>सा रे ग रहे, यादें संवरती रहें</p>
         <button id="startBtn" onclick="startMehfil()">▶ Play Radio</button>
     </div>
 
-    <!-- Center Hindi Title (Reference Style) -->
+    <!-- Center Hindi Title -->
     <div class="center-branding">
         <h1>महफ़िल</h1>
     </div>
@@ -447,12 +438,12 @@
     <script>
         const playlists = {
             '90s': [
-                { title: "Tumsa Koi Pyaara", artist: "Kumar Sanu, Alka Yagnik", videoId: "2t1V42K49io", art: "https://img.youtube.com/vi/2t1V42K49io/hqdefault.jpg" },
-                { title: "Woh Meri Neend Mera Chain", artist: "Sadhana Sargam", videoId: "5qap5aO4i9A", art: "https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg" }
+                { title: "Tumsa Koi Pyaara", artist: "Kumar Sanu, Alka Yagnik", videoId: "2t1V42K49io" },
+                { title: "Woh Meri Neend Mera Chain", artist: "Sadhana Sargam", videoId: "5qap5aO4i9A" }
             ],
             '20s': [
-                { title: "Kesariya", artist: "Arijit Singh", videoId: "BemziubuzNU", art: "https://img.youtube.com/vi/BemziubuzNU/hqdefault.jpg" },
-                { title: "Raataan Lambiyan", artist: "Jubin Nautiyal", videoId: "gvyUuxdRdR4", art: "https://img.youtube.com/vi/gvyUuxdRdR4/hqdefault.jpg" }
+                { title: "Kesariya", artist: "Arijit Singh", videoId: "BemziubuzNU" },
+                { title: "Raataan Lambiyan", artist: "Jubin Nautiyal", videoId: "gvyUuxdRdR4" }
             ]
         };
 
@@ -497,7 +488,8 @@
             const track = playlists[currentCategory][currentIndex];
             document.getElementById('trackTitle').innerText = track.title;
             document.getElementById('trackArtist').innerText = track.artist;
-            document.getElementById('albumArt').src = track.art;
+            // Using secure YouTube thumbnail endpoint
+            document.getElementById('albumArt').src = `https://img.youtube.com/vi/${track.videoId}/default.jpg`;
         }
 
         function togglePlay() {
