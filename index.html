@@ -26,7 +26,7 @@
             background-color: #1a1a1a;
         }
 
-        /* Background image layer with reliable fallback gradient */
+        /* Background image layer */
         .bg-layer {
             position: fixed;
             top: 0;
@@ -40,7 +40,6 @@
             z-index: -1;
         }
 
-        /* --- THEMES (Using high-quality Unsplash retro/cafe vibes as fallback if local images missing) --- */
         body.day-mode .bg-layer {
             background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop');
             filter: brightness(1) saturate(1);
@@ -51,7 +50,7 @@
             filter: brightness(0.6) saturate(0.8) contrast(1.1);
         }
 
-        /* Center Big Hindi Title (Pure Bright White) */
+        /* Center Big Hindi Title */
         .center-branding {
             position: absolute;
             top: 38%;
@@ -145,7 +144,7 @@
             font-weight: 600;
         }
 
-        /* Initial Start Overlay to bypass browser audio restrictions */
+        /* Initial Start Overlay */
         #startOverlay {
             position: fixed;
             top: 0;
@@ -215,12 +214,47 @@
             width: 35%;
         }
 
-        .track-info img {
+        /* Spinning Vintage CD / Vinyl Disc Design */
+        .vinyl-art {
             width: 48px;
             height: 48px;
+            background: radial-gradient(circle, #111 25%, #222 26%, #222 40%, #d4ac0d 41%, #d4ac0d 45%, #111 46%);
             border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255,255,255,0.4);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+            animation: spinVinyl 3s linear infinite;
+            animation-play-state: paused;
+            position: relative;
+        }
+
+        .vinyl-art::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 50%, rgba(255,255,255,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .vinyl-art.playing {
+            animation-play-state: running;
+        }
+
+        .vinyl-center {
+            width: 14px;
+            height: 14px;
+            background: #ffffff;
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+
+        @keyframes spinVinyl {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .track-text h4 {
@@ -404,7 +438,10 @@
     <!-- Floating Glass Pill Player -->
     <div class="glass-player">
         <div class="track-info">
-            <img id="albumArt" src="" alt="Album Art">
+            <!-- Spinning Vintage CD Vinyl Disc -->
+            <div class="vinyl-art" id="vinylDisc">
+                <div class="vinyl-center"></div>
+            </div>
             <div class="track-text">
                 <h4 id="trackTitle">Loading...</h4>
                 <p id="trackArtist">Mehfil Radio</p>
@@ -458,7 +495,7 @@
                 height: '0',
                 width: '0',
                 videoId: playlists[currentCategory][currentIndex].videoId,
-                playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'enablejsapi': 1 },
+                playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'enablejsapi': 1, 'origin': window.location.origin },
                 events: {
                     'onReady': (event) => { 
                         apiReady = true; 
@@ -475,6 +512,7 @@
                 player.playVideo();
                 isPlaying = true;
                 document.getElementById('playPauseBtn').innerText = '⏸';
+                document.getElementById('vinylDisc').classList.add('playing');
             }
             loadTrackInfo();
             setInterval(updateProgress, 1000);
@@ -488,8 +526,6 @@
             const track = playlists[currentCategory][currentIndex];
             document.getElementById('trackTitle').innerText = track.title;
             document.getElementById('trackArtist').innerText = track.artist;
-            // Using secure YouTube thumbnail endpoint
-            document.getElementById('albumArt').src = `https://img.youtube.com/vi/${track.videoId}/default.jpg`;
         }
 
         function togglePlay() {
@@ -497,10 +533,12 @@
             if (isPlaying) {
                 player.pauseVideo();
                 document.getElementById('playPauseBtn').innerText = '▶';
+                document.getElementById('vinylDisc').classList.remove('playing');
                 isPlaying = false;
             } else {
                 player.playVideo();
                 document.getElementById('playPauseBtn').innerText = '⏸';
+                document.getElementById('vinylDisc').classList.add('playing');
                 isPlaying = true;
             }
         }
@@ -520,6 +558,7 @@
             player.loadVideoById(track.videoId);
             loadTrackInfo();
             document.getElementById('playPauseBtn').innerText = '⏸';
+            document.getElementById('vinylDisc').classList.add('playing');
             isPlaying = true;
         }
 
