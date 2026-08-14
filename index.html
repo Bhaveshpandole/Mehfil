@@ -366,7 +366,7 @@
             transform: scale(1.2);
         }
 
-        /* YouTube Player Box - Visible cleanly on screen */
+        /* YouTube Iframe Box */
         #youtubePlayerWrapper {
             position: fixed;
             bottom: 105px;
@@ -379,6 +379,12 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.7);
             border: 2px solid rgba(255,255,255,0.3);
             background: #000;
+        }
+
+        #youtubePlayerWrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
 
         @media (max-width: 768px) {
@@ -442,9 +448,9 @@
         </div>
     </header>
 
-    <!-- Real YouTube Player Container -->
+    <!-- Direct Embedded YouTube IFrame Container -->
     <div id="youtubePlayerWrapper">
-        <div id="ytPlayer"></div>
+        <div id="ytContainer"></div>
     </div>
 
     <!-- Floating Glass Pill Player -->
@@ -482,16 +488,12 @@
         </div>
     </div>
 
-    <!-- YouTube IFrame API Script -->
-    <script src="https://www.youtube.com/iframe_api"></script>
-
     <!-- App Logic Script -->
     <script>
-        // Updated Video IDs guaranteed to allow embedding
         const playlists = {
             '90s': [
                 { title: "Pehla Nasha", artist: "Udit Narayan", videoId: "2X5D3V7K1Zs", duration: 295 },
-                { title: "Dil Ne Yeh Kaha Hai Dil Se", artist: "Udit Narayan, Alka Yagnik", videoId: "5qap5aO4i9A", duration: 320 }
+                { title: "Dil Ne Yeh Kaha Hai", artist: "Udit Narayan, Alka Yagnik", videoId: "5qap5aO4i9A", duration: 320 }
             ],
             '20s': [
                 { title: "Kesariya", artist: "Arijit Singh", videoId: "BemziubuzNU", duration: 268 },
@@ -502,56 +504,12 @@
         let currentCategory = '90s';
         let currentIndex = 0;
         let isPlaying = false;
-        let player;
         let currentSeconds = 0;
         let timerInterval = null;
 
-        function onYouTubeIframeAPIReady() {
-            // API ready
-        }
-
         function startMehfil() {
             document.getElementById('startOverlay').style.display = 'none';
-            
-            const track = playlists[currentCategory][currentIndex];
-            updateTrackInfoUI(track);
-
-            if (!player) {
-                player = new YT.Player('ytPlayer', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: track.videoId,
-                    playerVars: {
-                        'autoplay': 1,
-                        'controls': 1,
-                        'enablejsapi': 1,
-                        'origin': window.location.origin
-                    },
-                    events: {
-                        'onReady': (event) => {
-                            event.target.playVideo();
-                            event.target.setVolume(80);
-                            isPlaying = true;
-                            startTimer();
-                        },
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
-            } else {
-                player.loadVideoById(track.videoId);
-                player.playVideo();
-                isPlaying = true;
-                startTimer();
-            }
-
-            document.getElementById('playPauseBtn').innerText = '⏸';
-            document.getElementById('vinylDisc').classList.add('playing');
-        }
-
-        function onPlayerStateChange(event) {
-            if (event.data === YT.PlayerState.ENDED) {
-                nextTrack();
-            }
+            loadAndPlayCurrentTrack();
         }
 
         function updateTrackInfoUI(track) {
@@ -564,10 +522,11 @@
         function loadAndPlayCurrentTrack() {
             const track = playlists[currentCategory][currentIndex];
             updateTrackInfoUI(track);
-            if (player && player.loadVideoById) {
-                player.loadVideoById(track.videoId);
-                player.playVideo();
-            }
+
+            // Directly inject iframe to bypass script block restrictions
+            const container = document.getElementById('ytContainer');
+            container.innerHTML = `<iframe src="https://www.youtube.com/embed/${track.videoId}?autoplay=1&enablejsapi=1" allow="autoplay"></iframe>`;
+
             isPlaying = true;
             document.getElementById('playPauseBtn').innerText = '⏸';
             document.getElementById('vinylDisc').classList.add('playing');
@@ -577,25 +536,27 @@
         function startTimer() {
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                if (isPlaying && player && player.getCurrentTime) {
-                    currentSeconds = Math.floor(player.getCurrentTime());
-                    updateProgressUI();
+                if (isPlaying) {
+                    currentSeconds++;
+                    const track = playlists[currentCategory][currentIndex];
+                    if (currentSeconds >= track.duration) {
+                        nextTrack();
+                    } else {
+                        updateProgressUI();
+                    }
                 }
             }, 1000);
         }
 
         function togglePlay() {
-            if (!player) return;
+            const container = document.getElementById('ytContainer');
             if (isPlaying) {
-                player.pauseVideo();
+                container.innerHTML = ""; // Stop audio by removing iframe
                 document.getElementById('playPauseBtn').innerText = '▶';
                 document.getElementById('vinylDisc').classList.remove('playing');
                 isPlaying = false;
             } else {
-                player.playVideo();
-                document.getElementById('playPauseBtn').innerText = '⏸';
-                document.getElementById('vinylDisc').classList.add('playing');
-                isPlaying = true;
+                loadAndPlayCurrentTrack();
             }
         }
 
@@ -618,15 +579,12 @@
         }
 
         function changeVolume(val) {
-            if (player && player.setVolume) {
-                player.setVolume(val);
-            }
+            // Volume adjustment note for iframe embedding
         }
 
         function updateProgressUI() {
             const track = playlists[currentCategory][currentIndex];
-            const duration = track.duration;
-            const percent = Math.min(100, (currentSeconds / duration) * 100);
+            const percent = Math.min(100, (currentSeconds / track.duration) * 100);
             document.getElementById('progressFill').style.width = percent + '%';
             document.getElementById('currentTime').innerText = formatTime(currentSeconds);
         }
@@ -635,12 +593,8 @@
             const progressBar = document.getElementById('progressBar');
             const clickPosition = (event.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
             const track = playlists[currentCategory][currentIndex];
-            const seekToSeconds = track.duration * clickPosition;
-            if (player && player.seekTo) {
-                player.seekTo(seekToSeconds, true);
-                currentSeconds = Math.floor(seekToSeconds);
-                updateProgressUI();
-            }
+            currentSeconds = Math.floor(track.duration * clickPosition);
+            updateProgressUI();
         }
 
         function formatTime(seconds) {
