@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mehfil - Suro Ki</title>
+    <!-- Copyright-free music favicon -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3209/3209990.png" type="image/png">
+    
+    <!-- Importing Hindi Retro Font (Rozha One) for exact sign-board look -->
+    <link href="https://fonts.googleapis.com/css2?family=Rozha+One&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Background image layer to keep dim effect isolated */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: filter 1s ease;
+            z-index: -1;
+        }
+
+        /* --- DESKTOP DEFAULT STYLES --- */
+        body.day-mode .bg-layer {
+            background-image: url('desktop-day.jpg');
+            filter: brightness(1) saturate(1);
+        }
+
+        body.night-mode .bg-layer {
+            background-image: url('desktop-night.jpg');
+            filter: brightness(0.5) saturate(0.8) contrast(1.1);
+        }
+
+        /* --- MOBILE RESPONSIVE STYLES --- */
+        @media (max-width: 768px) {
+            body.day-mode .bg-layer {
+                background-image: url('mobile-day.jpg');
+            }
+            body.night-mode .bg-layer {
+                background-image: url('mobile-night.jpg');
+            }
+        }
+
+        /* Center Big Hindi Title (Pure Bright White) */
+        .center-branding {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .center-branding h1 {
+            font-family: 'Rozha One', serif;
+            font-size: 6.5rem;
+            color: #ffffff !important;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 25px rgba(0, 0, 0, 0.9), 0 2px 5px rgba(0, 0, 0, 0.9);
+            line-height: 1.1;
+        }
+
+        @media (max-width: 768px) {
+            .center-branding h1 {
+                font-size: 4rem;
+            }
+        }
+
+        /* Top Bar Styling */
+        .top-bar {
+            position: absolute;
+            top: 25px;
+            left: 40px;
+            right: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        .time-display {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .online-counter {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #2ecc71;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        .category-selectors {
+            display: flex;
+            gap: 10px;
+        }
+
+        .cat-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 15px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .cat-btn.active, .cat-btn:hover {
+            background: #fff;
+            color: #000;
+            font-weight: 600;
+        }
+
+        /* Initial Start Overlay to bypass browser audio restrictions */
+        #startOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            color: #fff;
+            gap: 20px;
+            backdrop-filter: blur(8px);
+        }
+
+        #startOverlay h1 {
+            font-family: 'Rozha One', serif;
+            font-size: 4rem;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        #startBtn {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        #startBtn:hover {
+            transform: scale(1.05);
+            background: #c0392b;
+        }
+
+        /* Floating Glass Pill Player */
+        .glass-player {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 730px;
+            max-width: 95%;
+            background: rgba(40, 20, 20, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .track-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 35%;
+        }
+
+        .track-info img {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .track-text h4 {
+            color: #fff;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .track-text p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.75rem;
+        }
+
+        .player-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 42%    ;
+            gap: 6px;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .controls button {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .controls button:hover {
+            transform: scale(1.15);
+        }
+
+        #playPauseBtn {
+            width: 36px;
+            height: 36px;
+            background: #fff;
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+        }
+
+        /* --- Vintage Radio Volume Control --- */
+        .vintage-volume {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 20%;
+            justify-content: flex-end;
+        }
+
+        .vintage-volume span {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            width: 75px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #d4ac0d; /* Brass / Vintage Metallic Look */
+            border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        /* --- MOBILE ADJUSTMENTS --- */
+        @media (max-width: 768px) {
+            .top-bar {
+                top: 15px;
+                left: 20px;
+                right: 20px;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .glass-player {
+                bottom: 20px;
+                padding: 10px 15px;
+                flex-direction: column;
+                gap: 12px;
+                width: 92%;
+            }
+            .track-info, .player-center, .vintage-volume {
+                width: 100%;
+                justify-content: center;
+            }
+            .controls {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body id="bodyTag" class="day-mode">
+
+    <!-- Separate Background Layer so image stays dim while text remains pure white -->
+    <div class="bg-layer"></div>
+
+    <!-- Start Overlay to enable audio playback smoothly -->
+    <div id="startOverlay">
+        <h1>महफ़िल</h1>
+        <p>सा रे ग रहे, यादें संवरती रहें</p>
+        <button id="startBtn" onclick="startMehfil()">▶ Play Radio</button>
+    </div>
+
+    <!-- Center Hindi Title (Reference Style) -->
+    <div class="center-branding">
+        <h1>महफ़िल</h1>
+    </div>
+
+    <!-- Top Bar / Header -->
+    <header class="top-bar">
+        <div class="time-display" id="timeDisplay">--:-- --</div>
+        <div class="online-counter">
+            <span class="pulse-dot"></span>
+            <span id="onlineCount">39</span> online
+        </div>
+        <div class="category-selectors">
+            <button class="cat-btn active" onclick="switchCategory(event, '90s')">90s Classic</button>
+            <button class="cat-btn" onclick="switchCategory(event, '20s')">20s Hits</button>
+        </div>
+    </header>
+
+    <!-- Hidden YouTube Audio Engine Container -->
+    <div id="youtubePlayer" style="display: none;"></div>
+
+    <!-- Floating Glass Pill Player -->
+    <div class="glass-player">
+        <div class="track-info">
+            <img id="albumArt" src="" alt="Album Art">
+            <div class="track-text">
+                <h4 id="trackTitle">Loading...</h4>
+                <p id="trackArtist">Mehfil Radio</p>
+            </div>
+        </div>
+        
+        <div class="player-center">
+            <div class="controls">
+                <button onclick="prevTrack()">⏮</button>
+                <button id="playPauseBtn" onclick="togglePlay()">⏸</button>
+                <button onclick="nextTrack()">⏭</button>
+            </div>
+            <div class="progress-container">
+                <span id="currentTime">0:00</span>
+                <div class="progress-bar" id="progressBar" onclick="seekTrack(event)">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span id="totalTime">4:56</span>
+            </div>
+        </div>
+
+        <!-- Vintage Radio Volume Control -->
+        <div class="vintage-volume">
+            <span>📻</span>
+            <input type="range" min="0" max="100" value="80" class="volume-slider" id="volumeSlider" oninput="changeVolume(this.value)">
+        </div>
+    </div>
+
+    <!-- YouTube API and App Script -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+        const playlists = {
+            '90s': [
+                { title: "Tumsa Koi Pyaara", artist: "Kumar Sanu, Alka Yagnik", videoId: "2t1V42K49io", art: "https://img.youtube.com/vi/2t1V42K49io/hqdefault.jpg" },
+                { title: "Woh Meri Neend Mera Chain", artist: "Sadhana Sargam", videoId: "5qap5aO4i9A", art: "https://img.youtube.com/vi/5qap5aO4i9A/hqdefault.jpg" }
+            ],
+            '20s': [
+                { title: "Kesariya", artist: "Arijit Singh", videoId: "BemziubuzNU", art: "https://img.youtube.com/vi/BemziubuzNU/hqdefault.jpg" },
+                { title: "Raataan Lambiyan", artist: "Jubin Nautiyal", videoId: "gvyUuxdRdR4", art: "https://img.youtube.com/vi/gvyUuxdRdR4/hqdefault.jpg" }
+            ]
+        };
+
+        let currentCategory = '90s';
+        let currentIndex = 0;
+        let player;
+        let isPlaying = false;
+        let apiReady = false;
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtubePlayer', {
+                height: '0',
+                width: '0',
+                videoId: playlists[currentCategory][currentIndex].videoId,
+                playerVars: { 'autoplay': 0, 'controls': 0, 'disablekb': 1, 'enablejsapi': 1 },
+                events: {
+                    'onReady': (event) => { 
+                        apiReady = true; 
+                        event.target.setVolume(80);
+                    },
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function startMehfil() {
+            document.getElementById('startOverlay').style.display = 'none';
+            if (apiReady && player) {
+                player.playVideo();
+                isPlaying = true;
+                document.getElementById('playPauseBtn').innerText = '⏸';
+            }
+            loadTrackInfo();
+            setInterval(updateProgress, 1000);
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) { nextTrack(); }
+        }
+
+        function loadTrackInfo() {
+            const track = playlists[currentCategory][currentIndex];
+            document.getElementById('trackTitle').innerText = track.title;
+            document.getElementById('trackArtist').innerText = track.artist;
+            document.getElementById('albumArt').src = track.art;
+        }
+
+        function togglePlay() {
+            if (!player) return;
+            if (isPlaying) {
+                player.pauseVideo();
+                document.getElementById('playPauseBtn').innerText = '▶';
+                isPlaying = false;
+            } else {
+                player.playVideo();
+                document.getElementById('playPauseBtn').innerText = '⏸';
+                isPlaying = true;
+            }
+        }
+
+        function nextTrack() {
+            currentIndex = (currentIndex + 1) % playlists[currentCategory].length;
+            playCurrentIndex();
+        }
+
+        function prevTrack() {
+            currentIndex = (currentIndex - 1 + playlists[currentCategory].length) % playlists[currentCategory].length;
+            playCurrentIndex();
+        }
+
+        function playCurrentIndex() {
+            const track = playlists[currentCategory][currentIndex];
+            player.loadVideoById(track.videoId);
+            loadTrackInfo();
+            document.getElementById('playPauseBtn').innerText = '⏸';
+            isPlaying = true;
+        }
+
+        function switchCategory(event, category) {
+            currentCategory = category;
+            currentIndex = 0;
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            playCurrentIndex();
+        }
+
+        function changeVolume(val) {
+            if (player && typeof player.setVolume === 'function') {
+                player.setVolume(val);
+            }
+        }
+
+        function updateProgress() {
+            if (!player || typeof player.getCurrentTime !== 'function') return;
+            const current = player.getCurrentTime();
+            const duration = player.getDuration() || 1;
+            document.getElementById('progressFill').style.width = (current / duration) * 100 + '%';
+            document.getElementById('currentTime').innerText = formatTime(current);
+            document.getElementById('totalTime').innerText = formatTime(duration);
+        }
+
+        function seekTrack(event) {
+            const progressBar = document.getElementById('progressBar');
+            const clickPosition = (event.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
+            player.seekTo(player.getDuration() * clickPosition, true);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function checkTimeTheme() {
+            const hours = new Date().getHours();
+            const bodyTag = document.getElementById('bodyTag');
+            if (hours >= 6 && hours < 18) {
+                bodyTag.className = 'day-mode';
+            } else {
+                bodyTag.className = 'night-mode';
+            }
+            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('timeDisplay').innerText = timeString.toLowerCase();
+        }
+
+        setInterval(checkTimeTheme, 10000);
+        checkTimeTheme();
+
+        setInterval(() => {
+            const countElement = document.getElementById('onlineCount');
+            let currentCount = parseInt(countElement.innerText);
+            let fluctuation = Math.floor(Math.random() * 5) - 2;
+            let newCount = Math.max(25, currentCount + fluctuation);
+            countElement.innerText = newCount;
+        }, 5000);
+    </script>
+</body>
+</html>
