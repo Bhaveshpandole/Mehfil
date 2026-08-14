@@ -366,21 +366,6 @@
             transform: scale(1.2);
         }
 
-        /* Visible active YouTube player box tucked nicely in the corner or footer */
-        #playerContainer {
-            position: fixed;
-            bottom: 100px;
-            right: 30px;
-            width: 200px;
-            height: 110px;
-            z-index: 100;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
-            border: 2px solid rgba(255,255,255,0.2);
-            background: #000;
-        }
-
         @media (max-width: 768px) {
             .top-bar {
                 top: 15px;
@@ -402,12 +387,6 @@
             }
             .controls {
                 justify-content: center;
-            }
-            #playerContainer {
-                width: 120px;
-                height: 70px;
-                bottom: 130px;
-                right: 15px;
             }
         }
     </style>
@@ -442,8 +421,8 @@
         </div>
     </header>
 
-    <!-- Visible YouTube Player Box -->
-    <div id="playerContainer"></div>
+    <!-- Native HTML5 Audio Element for Instant Sound -->
+    <audio id="audioPlayer" preload="auto"></audio>
 
     <!-- Floating Glass Pill Player -->
     <div class="glass-player">
@@ -469,7 +448,7 @@
                 <div class="progress-bar" id="progressBar" onclick="seekTrack(event)">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <span id="totalTime">4:56</span>
+                <span id="totalTime">3:30</span>
             </div>
         </div>
 
@@ -484,57 +463,61 @@
     <script>
         const playlists = {
             '90s': [
-                { title: "Tumsa Koi Pyaara", artist: "Kumar Sanu, Alka Yagnik", videoId: "2t1V42K49io", duration: 305 },
-                { title: "Woh Meri Neend Mera Chain", artist: "Sadhana Sargam", videoId: "5qap5aO4i9A", duration: 270 }
+                { title: "Tumsa Koi Pyaara", artist: "Kumar Sanu, Alka Yagnik", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: 210 },
+                { title: "Woh Meri Neend Mera Chain", artist: "Sadhana Sargam", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", duration: 180 }
             ],
             '20s': [
-                { title: "Kesariya", artist: "Arijit Singh", videoId: "BemziubuzNU", duration: 268 },
-                { title: "Raataan Lambiyan", artist: "Jubin Nautiyal", videoId: "gvyUuxdRdR4", duration: 230 }
+                { title: "Kesariya", artist: "Arijit Singh", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", duration: 200 },
+                { title: "Raataan Lambiyan", artist: "Jubin Nautiyal", audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", duration: 190 }
             ]
         };
 
         let currentCategory = '90s';
         let currentIndex = 0;
         let isPlaying = false;
-        let currentSeconds = 0;
-        let timerInterval = null;
+        let audioElem = document.getElementById('audioPlayer');
 
         function startMehfil() {
             document.getElementById('startOverlay').style.display = 'none';
             loadAndPlayTrack();
-            isPlaying = true;
-            document.getElementById('playPauseBtn').innerText = '⏸';
-            document.getElementById('vinylDisc').classList.add('playing');
         }
 
         function loadAndPlayTrack() {
             const track = playlists[currentCategory][currentIndex];
             document.getElementById('trackTitle').innerText = track.title;
             document.getElementById('trackArtist').innerText = track.artist;
+            document.getElementById('totalTime').innerText = formatTime(track.duration);
             
-            // Render visible YouTube iframe so browser allows audio playback
-            const container = document.getElementById('playerContainer');
-            container.innerHTML = `<iframe width="100%" height="100%" src="https://www.github.com/embed/${track.videoId}?autoplay=1&enablejsapi=1" style="border:none;" allow="autoplay"></iframe>`.replace('www.github.com', 'www.youtube.com');
-            
-            currentSeconds = 0;
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (isPlaying) {
-                    currentSeconds++;
-                    updateProgressUI();
-                }
-            }, 1000);
+            audioElem.src = track.audioUrl;
+            audioElem.volume = document.getElementById('volumeSlider').value / 100;
+            audioElem.play().then(() => {
+                isPlaying = true;
+                document.getElementById('playPauseBtn').innerText = '⏸';
+                document.getElementById('vinylDisc').classList.add('playing');
+            }).catch(err => {
+                console.log("Playback error:", err);
+            });
         }
 
+        audioElem.ontimeupdate = function() {
+            if (!audioElem.duration) return;
+            const progressPercent = (audioElem.currentTime / audioElem.duration) * 100;
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+            document.getElementById('currentTime').innerText = formatTime(audioElem.currentTime);
+        };
+
+        audioElem.onended = function() {
+            nextTrack();
+        };
+
         function togglePlay() {
-            const container = document.getElementById('playerContainer');
             if (isPlaying) {
-                container.innerHTML = '';
+                audioElem.pause();
                 document.getElementById('playPauseBtn').innerText = '▶';
                 document.getElementById('vinylDisc').classList.remove('playing');
                 isPlaying = false;
             } else {
-                loadAndPlayTrack();
+                audioElem.play();
                 document.getElementById('playPauseBtn').innerText = '⏸';
                 document.getElementById('vinylDisc').classList.add('playing');
                 isPlaying = true;
@@ -544,17 +527,11 @@
         function nextTrack() {
             currentIndex = (currentIndex + 1) % playlists[currentCategory].length;
             loadAndPlayTrack();
-            isPlaying = true;
-            document.getElementById('playPauseBtn').innerText = '⏸';
-            document.getElementById('vinylDisc').classList.add('playing');
         }
 
         function prevTrack() {
             currentIndex = (currentIndex - 1 + playlists[currentCategory].length) % playlists[currentCategory].length;
             loadAndPlayTrack();
-            isPlaying = true;
-            document.getElementById('playPauseBtn').innerText = '⏸';
-            document.getElementById('vinylDisc').classList.add('playing');
         }
 
         function switchCategory(event, category) {
@@ -562,34 +539,19 @@
             currentIndex = 0;
             document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
-            loadAndPlayTrack();
-            isPlaying = true;
-            document.getElementById('playPauseBtn').innerText = '⏸';
-            document.getElementById('vinylDisc').classList.add('playing');
+            loadAndPayTrack = loadAndPlayTrack();
         }
 
         function changeVolume(val) {
-            // Volume slider handle
-        }
-
-        function updateProgressUI() {
-            const track = playlists[currentCategory][currentIndex];
-            const duration = track.duration;
-            if (currentSeconds >= duration) {
-                nextTrack();
-                return;
-            }
-            document.getElementById('progressFill').style.width = (currentSeconds / duration) * 100 + '%';
-            document.getElementById('currentTime').innerText = formatTime(currentSeconds);
-            document.getElementById('totalTime').innerText = formatTime(duration);
+            audioElem.volume = val / 100;
         }
 
         function seekTrack(event) {
             const progressBar = document.getElementById('progressBar');
             const clickPosition = (event.clientX - progressBar.getBoundingClientRect().left) / progressBar.offsetWidth;
-            const track = playlists[currentCategory][currentIndex];
-            currentSeconds = Math.floor(track.duration * clickPosition);
-            updateProgressUI();
+            if (audioElem.duration) {
+                audioElem.currentTime = clickPosition * audioElem.duration;
+            }
         }
 
         function formatTime(seconds) {
