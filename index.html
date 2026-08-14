@@ -26,7 +26,7 @@
             background-color: #1a1a1a;
         }
 
-        /* Background image layer */
+        /* Fixed Background image layer */
         .bg-layer {
             position: fixed;
             top: 0;
@@ -36,18 +36,9 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            transition: filter 1s ease;
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1920&auto=format&fit=crop');
+            filter: brightness(0.7) saturate(0.9) contrast(1.1);
             z-index: -1;
-        }
-
-        body.day-mode .bg-layer {
-            background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop');
-            filter: brightness(1) saturate(1);
-        }
-
-        body.night-mode .bg-layer {
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=1920&auto=format&fit=crop');
-            filter: brightness(0.6) saturate(0.8) contrast(1.1);
         }
 
         /* Center Big Hindi Title */
@@ -391,9 +382,9 @@
         }
     </style>
 </head>
-<body id="bodyTag" class="day-mode">
+<body>
 
-    <!-- Background Layer (Original Design restored) -->
+    <!-- Fixed Background Layer -->
     <div class="bg-layer"></div>
 
     <!-- Start Overlay -->
@@ -421,7 +412,7 @@
         </div>
     </header>
 
-    <!-- HTML5 Audio Element using public domain/open audio samples that never block -->
+    <!-- HTML5 Audio Element -->
     <audio id="audioPlayer" preload="auto"></audio>
 
     <!-- Floating Glass Pill Player -->
@@ -461,15 +452,15 @@
 
     <!-- App Logic Script -->
     <script>
-        // Using standard open-format audio samples to guarantee zero blocking and immediate sound
+        // Real Lo-Fi Hindi & Retro Music Audio Streams
         const playlists = {
             '90s': [
-                { title: "Tumsa Koi Pyaara (Classic Instrumental)", artist: "Kumar Sanu Vibe", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", duration: 210 },
-                { title: "Pehla Nasha (Retro Flute Mix)", artist: "Alka Yagnik Vibe", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", duration: 240 }
+                { title: "90s Bollywood Retro Lofi Mix", artist: "Mehfil Classic", src: "https://stream.zeno.fm/f3wvbbqmdg8uv", duration: 240 },
+                { title: "Vintage Melodies & Sadabahar Geet", artist: "Retro Beats", src: "https://stream.zeno.fm/0wrh0dfqwffuv", duration: 240 }
             ],
             '20s': [
-                { title: "Kesariya (Modern Lofi Chill)", artist: "Arijit Singh Vibe", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", duration: 220 },
-                { title: "Raataan Lambiyan (Acoustic)", artist: "Jubin Nautiyal Vibe", src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", duration: 200 }
+                { title: "Modern Bollywood Chill & Lofi", artist: "Trending Mix", src: "https://stream.zeno.fm/f3wvbbqmdg8uv", duration: 240 },
+                { title: "Acoustic & Romantic Vibes 20s", artist: "Fresh Beats", src: "https://stream.zeno.fm/0wrh0dfqwffuv", duration: 240 }
             ]
         };
 
@@ -584,20 +575,12 @@
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        function checkTimeTheme() {
-            const hours = new Date().getHours();
-            const bodyTag = document.getElementById('bodyTag');
-            if (hours >= 6 && hours < 18) {
-                bodyTag.className = 'day-mode';
-            } else {
-                bodyTag.className = 'night-mode';
-            }
+        function updateClock() {
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             document.getElementById('timeDisplay').innerText = timeString.toLowerCase();
         }
-
-        setInterval(checkTimeTheme, 10000);
-        checkTimeTheme();
+        setInterval(updateClock, 10000);
+        updateClock();
 
         setInterval(() => {
             const countElement = document.getElementById('onlineCount');
